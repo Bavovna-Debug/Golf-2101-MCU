@@ -6,6 +6,10 @@ void InitDisplay();
 
 void ResetDisplay();
 
+void PrintBatteryStatus(const byte batteryLevel);
+
+void PrintDebugLine(const String message);
+
 void DisplaySpeed(const unsigned short speedA, const unsigned short speedB);
 
 void PrintDShotLine(const unsigned short speedDShot);

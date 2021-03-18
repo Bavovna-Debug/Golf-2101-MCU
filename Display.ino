@@ -14,15 +14,48 @@ void InitDisplay()
 
 void ResetDisplay()
 {
-    lcd.setCursor(0, 0);
-    lcd.print("Shoot strength");
+}
+
+void PrintBatteryStatus(const byte batteryLevel)
+{
+    if (batteryLevel == 0)
+    {
+        lcd.setCursor(16, 0);
+        lcd.print("Low!");
+    }
+    else
+    {
+        char s[LineLength + sizeof(char)];
+        sprintf(s, "%3u%%", batteryLevel);
+        lcd.setCursor(16, 0);
+        lcd.print(s);
+    }
+}
+
+void PrintDebugLine(const String message)
+{
+    lcd.setCursor(0, 3);
+
+    byte numberOfLeadingSpaces = (LineLength - message.length()) / 2;
+    byte numberOfTrailingSpaces = (LineLength - message.length()) - numberOfLeadingSpaces;
+    for (byte i = 0; i < numberOfLeadingSpaces; i++)
+    {
+        lcd.print(" ");
+    }
+
+    lcd.print(message);
+
+    for (byte i = 0; i < numberOfTrailingSpaces; i++)
+    {
+        lcd.print(" ");
+    }
 }
 
 void DisplaySpeed(const unsigned short speedA, const unsigned short speedB)
 {
     char s[LineLength + sizeof(char)];
-    sprintf(s, "%2u.%02u", speedA, speedB);
-    lcd.setCursor(15, 0);
+    sprintf(s, "Shoot %2u.%02u", speedA, speedB);
+    lcd.setCursor(0, 0);
     lcd.print(s);
 }
 
