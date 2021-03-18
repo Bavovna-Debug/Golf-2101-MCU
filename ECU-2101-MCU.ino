@@ -43,6 +43,7 @@ unsigned short speedA = 0;
 unsigned short speedB = 0;
 signed short speedDisplayed = 0;
 unsigned short speedDShot = 0;
+bool ballAvailableState = false;
 
 void setup()
 {
@@ -98,7 +99,24 @@ void loop()
         contentVersion++;
     }
 
-    if (LeftButtonPressed() == true)
+    bool ballAvailableStateNew = IsBallAvailable();
+    if (ballAvailableStateNew != ballAvailableState)
+    {
+        ballAvailableState = ballAvailableStateNew;
+
+        if (ballAvailableState == false)
+        {
+            PrintBallInfoLine("Load a ball!");
+            PrintRightButton("");
+        }
+        else
+        {
+            ResetBallInfoLine();
+            PrintRightButton("SHOOT");
+        }
+    }
+
+    if (IsLeftButtonPressed() == true)
     {
         if (constantMotorMode == false)
         {
@@ -116,7 +134,7 @@ void loop()
         }
     }
 
-    if (RightButtonPressed() == true)
+    if ((IsRightButtonPressed() == true) && (ballAvailableState == true))
     {
         Fire();
     }
@@ -142,14 +160,19 @@ void ValidateSpeed()
     speedDShot = speedDisplayed + 48;
 }
 
-bool LeftButtonPressed()
+bool IsLeftButtonPressed()
 {
     return (digitalRead(PinButtonL) == LOW);
 }
 
-bool RightButtonPressed()
+bool IsRightButtonPressed()
 {
     return (digitalRead(PinButtonR) == LOW);
+}
+
+bool IsBallAvailable()
+{
+    return true;
 }
 
 void StartMotor()
@@ -184,6 +207,21 @@ void StopMotor()
     ResetStatusLine();
 }
 
+void StartServo()
+{
+    Wire.beginTransmission(8);
+    Wire.write(byte(SERVO_START));
+    Wire.endTransmission();
+}
+
+byte FetchServoStatus()
+{
+    Wire.requestFrom(8, 1);
+    while (!Wire.available()) { }
+    byte statusByte = Wire.read();
+    return statusByte;
+}
+
 void Fire()
 {
     if (constantMotorMode == false)
@@ -202,38 +240,38 @@ void Fire()
     {
         PrintStatusLine("fire");
 
-        Wire.beginTransmission(8);
-        Wire.write(byte(SERVO_START));
-        Wire.endTransmission();
+        StartServo();
 
-        for (;;)
+        byte servoStatus = 0;
+        do
         {
-            Wire.requestFrom(8, 1);
-            while (!Wire.available()) { }
-            byte statusByte = Wire.read();
+            byte servoStatusNew = FetchServoStatus();
 
-            if (statusByte == SERVO_LOAD)
+            if (servoStatusNew != servoStatus)
             {
-                PrintStatusLine("ball load");
-            }
-            else if (statusByte == SERVO_WAIT)
-            {
-                PrintStatusLine("delay");
-            }
-            else if (statusByte == SERVO_TURN)
-            {
-                PrintStatusLine("ball turn");
-            }
-            else if (statusByte == SERVO_DONE)
-            {
-                ResetStatusLine();
-                break;
-            }
+                servoStatus = servoStatusNew;
 
-            delay(100);
+                switch (servoStatus)
+                {
+                    case SERVO_LOAD:
+                        PrintStatusLine("ball load");
+                        break;
+
+                    case SERVO_TURN:
+                        PrintStatusLine("ball turn");
+                        break;
+
+                    case SERVO_DONE:
+                        ResetStatusLine();
+                        break;
+                }
+
+                delay(100);
+            }
         }
+        while (servoStatus != SERVO_DONE);
     }
-    while (RightButtonPressed() == true);
+    while (IsRightButtonPressed() == true);
 
     if (constantMotorMode == false)
     {

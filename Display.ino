@@ -1,7 +1,10 @@
 #include <LiquidCrystal_I2C.h>
 #include "Display.h"
 
-LiquidCrystal_I2C lcd(0x27, 20, 4);
+const byte LineLength = 20;
+const byte NumberOfLines = 4;
+
+LiquidCrystal_I2C lcd(0x27, LineLength, NumberOfLines);
 
 void InitDisplay()
 {
@@ -17,7 +20,7 @@ void ResetDisplay()
 
 void DisplaySpeed(const unsigned short speedA, const unsigned short speedB)
 {
-    char s[20];
+    char s[LineLength + sizeof(char)];
     sprintf(s, "%2u.%02u", speedA, speedB);
     lcd.setCursor(15, 0);
     lcd.print(s);
@@ -25,7 +28,7 @@ void DisplaySpeed(const unsigned short speedA, const unsigned short speedB)
 
 void PrintDShotLine(const unsigned short speedDShot)
 {
-    char str[21];
+    char str[LineLength + sizeof(char)];
     sprintf(str, "DShot: %u", speedDShot);
 
     lcd.setCursor(0, 1);
@@ -38,9 +41,34 @@ void ResetDShotLine()
     lcd.print("                    ");
 }
 
+void PrintBallInfoLine(const String message)
+{
+    lcd.setCursor(0, 1);
+
+    byte numberOfLeadingSpaces = (LineLength - message.length()) / 2;
+    byte numberOfTrailingSpaces = (LineLength - message.length()) - numberOfLeadingSpaces;
+    for (byte i = 0; i < numberOfLeadingSpaces; i++)
+    {
+        lcd.print(" ");
+    }
+
+    lcd.print(message);
+
+    for (byte i = 0; i < numberOfTrailingSpaces; i++)
+    {
+        lcd.print(" ");
+    }
+}
+
+void ResetBallInfoLine()
+{
+    lcd.setCursor(0, 1);
+    lcd.print("                    ");
+}
+
 void PrintStatusLine(const String message)
 {
-    char str[21];
+    char str[LineLength + sizeof(char)];
     sprintf(str, "Debug: %s", message.c_str());
     str[sizeof(str) - sizeof(char)] = 0;
 
@@ -68,7 +96,7 @@ void PrintLeftButton(const String buttonLabel)
         lcd.print(buttonLabel);
         lcd.print("]");
 
-        byte numberOfSpaces = (10 * sizeof(char)) - (2 * sizeof(char)) - buttonLabel.length();
+        byte numberOfSpaces = (LineLength / 2) - 2 - buttonLabel.length();
         for (byte i = 0; i < numberOfSpaces; i++)
         {
             lcd.print(" ");
@@ -78,7 +106,7 @@ void PrintLeftButton(const String buttonLabel)
 
 void PrintRightButton(const String buttonLabel)
 {
-    lcd.setCursor(10, 3);
+    lcd.setCursor((LineLength / 2), 3);
 
     if (buttonLabel.length() == 0)
     {
@@ -86,7 +114,7 @@ void PrintRightButton(const String buttonLabel)
     }
     else
     {
-        byte numberOfSpaces = (10 * sizeof(char)) - (2 * sizeof(char)) - buttonLabel.length();
+        byte numberOfSpaces = (LineLength / 2) - 2 - buttonLabel.length();
         for (byte i = 0; i < numberOfSpaces; i++)
         {
             lcd.print(" ");

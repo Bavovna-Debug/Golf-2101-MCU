@@ -12,6 +12,10 @@ void PrintDShotLine(const unsigned short speedDShot);
 
 void ResetDShotLine();
 
+void PrintBallInfoLine(const String message);
+
+void ResetBallInfoLine();
+
 void PrintStatusLine(const String message);
 
 void ResetStatusLine();
