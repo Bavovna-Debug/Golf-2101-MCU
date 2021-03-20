@@ -5,29 +5,29 @@
 #include "Display.h"
 #include "DShot.h"
 
-const int PinRotaryAL   = 2;
-const int PinRotaryAR   = 3;
-const int PinRotaryBL   = 6;
-const int PinRotaryBR   = 7;
-const int PinButtonL    = 4;
-const int PinButtonR    = 5;
+const int PinRotaryAL   = 7;
+const int PinRotaryAR   = 6;
+const int PinRotaryBL   = 3;
+const int PinRotaryBR   = 2;
+const int PinButtonL    = 5;
+const int PinButtonR    = 4;
 const int PinESC        = 8;
 
 // Value of 582 corresponds to 8.4V by a resistor bridge of 10 kOhm / 5.1 kOhm.
 //
 const int BatteryLowLevel = 582;
 
-const unsigned long DelayAfterSpeedUp = 2000lu;
-const unsigned long FlashSettingsInterval = 10lu * 1000lu;
-const unsigned long BatteryStatusInterval = 5lu * 1000lu;
-const unsigned long BatteryInitializationMessageDelay = 5lu * 1000lu;
+const unsigned long MotorSpeedUpDelay                   = 2lu;
+const unsigned long MotorSlowDownDelay                  = 1lu;
+const unsigned long DelayAfterSpeedUp                   = 2lu * 1000lu;
+const unsigned long FlashSettingsInterval               = 5lu * 1000lu;
+const unsigned long BatteryStatusInterval               = 5lu * 1000lu;
+const unsigned long BatteryInitializationMessageDelay   = 5lu * 1000lu;
 
 Encoder encoderA(PinRotaryAL, PinRotaryAR);
 Encoder encoderB(PinRotaryBL, PinRotaryBR);
 
 DShot esc;
-
-static bool constantMotorMode = false;
 
 struct EEPROMData
 {
@@ -44,15 +44,17 @@ static unsigned long contentVersion = 0;
 static unsigned long schedulerEEPROM = 0;
 static unsigned long schedulerBattery = 0;
 
-long lastA = 0;
-long lastB = 0;
+static long lastA = 0;
+static long lastB = 0;
 
-int batteryFullLevel = 0;
-unsigned short speedA = 0;
-unsigned short speedB = 0;
-signed short speedDisplayed = 0;
-unsigned short speedDShot = 0;
-bool ballAvailableState = true;
+static int batteryFullLevel = 0;
+static unsigned short speedA = 0;
+static unsigned short speedB = 0;
+static signed short speedDisplayed = 0;
+static unsigned short speedDShot = 0;
+static bool motorRunning = false;
+static bool permanentMotorRun = false;
+static bool ballAvailableState = true;
 
 void setup()
 {
@@ -105,6 +107,8 @@ void loop()
     long currentB = encoderB.read() / 4;
     if ((currentA != lastA) || (currentB != lastB))
     {
+        schedulerEEPROM = timestamp + FlashSettingsInterval;
+
         if (currentA < lastA) speedA--;
         if (currentA > lastA) speedA++;
         if (currentB < lastB) speedB--;
@@ -139,16 +143,16 @@ void loop()
 
     if (IsLeftButtonPressed() == true)
     {
-        if (constantMotorMode == false)
+        while (IsLeftButtonPressed() == true) { }
+
+        if (permanentMotorRun == false)
         {
-            constantMotorMode = true;
             PrintLeftButton("");
-            StartMotor();
+            StartMotor(true);
             PrintLeftButton("MTR STOP");
         }
         else
         {
-            constantMotorMode = false;
             PrintLeftButton("");
             StopMotor();
             PrintLeftButton("MTR STRT");
@@ -178,11 +182,27 @@ void ValidateSpeed()
     speedA = speedDisplayed / 100;
     speedB = speedDisplayed % 100;
 
-    speedDShot = speedDisplayed + 48;
+    unsigned short speedDShotNew = speedDisplayed + 48;
 
-    if (constantMotorMode == true)
+    if (motorRunning == false)
     {
-        esc.setThrottle(speedDShot);
+        speedDShot = speedDShotNew;
+    }
+    else
+    {
+        while (speedDShot < speedDShotNew)
+        {
+            speedDShot++;
+            esc.setThrottle(speedDShot);
+            delay(MotorSpeedUpDelay);
+        }
+
+        while (speedDShot > speedDShotNew)
+        {
+            speedDShot--;
+            esc.setThrottle(speedDShot);
+            delay(MotorSlowDownDelay);
+        }
     }
 }
 
@@ -204,16 +224,20 @@ bool IsBallAvailable()
     return ((payload & BALL_STATE) == BALL_STATE);
 }
 
-void StartMotor()
+void StartMotor(const bool permanent)
 {
     PrintStatusLine("speed up");
+
+    permanentMotorRun = permanent;
+
+    motorRunning = true;
 
     for (unsigned short currentSpeed = 100;
          currentSpeed < speedDShot;
          currentSpeed++)
     { 
         esc.setThrottle(currentSpeed);
-        delay(1);
+        delay(MotorSpeedUpDelay);
     }
 
     ResetStatusLine();
@@ -228,10 +252,14 @@ void StopMotor()
          currentSpeed--)
     { 
         esc.setThrottle(currentSpeed);
-        delay(1);
+        delay(MotorSlowDownDelay);
     }
 
     esc.setThrottle(0);
+
+    motorRunning = false;
+
+    permanentMotorRun = false;
 
     ResetStatusLine();
 }
@@ -253,9 +281,11 @@ byte FetchServoStatus()
 
 void Fire()
 {
-    if (constantMotorMode == false)
+    bool shortShoot = (permanentMotorRun == false) ? true : false;
+
+    if (shortShoot == true)
     {
-        StartMotor();
+        StartMotor(false);
 
         PrintDShotLine(speedDShot);
 
@@ -301,7 +331,7 @@ void Fire()
     }
     while (IsRightButtonPressed() == true);
 
-    if (constantMotorMode == false)
+    if (shortShoot == true)
     {
         ResetDShotLine();
 
