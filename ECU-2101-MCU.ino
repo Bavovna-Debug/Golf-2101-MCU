@@ -22,7 +22,8 @@ const unsigned long MotorSlowDownDelay                  = 1lu;
 const unsigned long DelayAfterSpeedUp                   = 2lu * 1000lu;
 const unsigned long FlashSettingsInterval               = 5lu * 1000lu;
 const unsigned long BatteryStatusInterval               = 5lu * 1000lu;
-const unsigned long BatteryInitializationMessageDelay   = 5lu * 1000lu;
+const unsigned long BatteryInitializationMessageDelay   = 3lu * 1000lu;
+const unsigned long BatteryInitializationConfirmationDelay = 2lu * 1000lu;
 
 Encoder encoderA(PinRotaryAL, PinRotaryAR);
 Encoder encoderB(PinRotaryBL, PinRotaryBR);
@@ -354,7 +355,7 @@ void InitializeBatteryFullLevel()
 
             PrintDebugLine("New level saved");
 
-            delay(1000);
+            delay(BatteryInitializationConfirmationDelay);
 
             PrintDebugLine("Release buttons");
         }
@@ -365,7 +366,7 @@ void InitializeBatteryFullLevel()
 
         while ((IsLeftButtonPressed() == true) || (IsLeftButtonPressed() == true)) { }
 
-        delay(1000);
+        delay(BatteryInitializationConfirmationDelay);
     }
 }
 
