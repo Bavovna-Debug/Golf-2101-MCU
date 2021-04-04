@@ -5,8 +5,8 @@
 #include "Display.h"
 #include "DShot.h"
 
-const int PinRotaryAL   = 7;
-const int PinRotaryAR   = 6;
+const int PinRotaryAL   = 11;
+const int PinRotaryAR   = 10;
 const int PinRotaryBL   = 3;
 const int PinRotaryBR   = 2;
 const int PinButtonL    = 5;
