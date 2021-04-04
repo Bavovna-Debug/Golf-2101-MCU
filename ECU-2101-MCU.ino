@@ -36,7 +36,6 @@ struct EEPROMData
     int batteryFullLevel;
     unsigned short speedA;
     unsigned short speedB;
-    unsigned int speedDisplayed;
 };
 
 EEPROMData eepromData;
@@ -183,7 +182,7 @@ void ValidateSpeed()
     speedA = speedDisplayed / 100;
     speedB = speedDisplayed % 100;
 
-    unsigned short speedDShotNew = speedDisplayed + 48;
+    unsigned short speedDShotNew = speedDisplayed + 47;
 
     if (motorRunning == false)
     {
@@ -414,7 +413,6 @@ void LoadFromEEPROM()
         batteryFullLevel = eepromData.batteryFullLevel;
         speedA = eepromData.speedA;
         speedB = eepromData.speedB;
-        speedDisplayed = eepromData.speedDisplayed;
     }
 }
 
@@ -433,7 +431,6 @@ void StoreToEEPROM(const bool forced)
         eepromData.batteryFullLevel = batteryFullLevel;
         eepromData.speedA = speedA;
         eepromData.speedB = speedB;
-        eepromData.speedDisplayed = speedDisplayed;
         EEPROM.put(0x00, eepromData);
     }
 }
