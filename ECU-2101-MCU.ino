@@ -27,7 +27,6 @@ const unsigned long BatteryInitializationConfirmationDelay = 2lu * 1000lu;
 
 Encoder encoderA(PinRotaryAL, PinRotaryAR);
 Encoder encoderB(PinRotaryBL, PinRotaryBR);
-
 DShot esc;
 
 struct EEPROMData
@@ -218,7 +217,7 @@ bool IsRightButtonPressed()
 
 bool IsBallAvailable()
 {
-    Wire.requestFrom(8, 1);
+    Wire.requestFrom(I2C_ID_SERVO, 1);
     while (!Wire.available()) { }
     byte payload = Wire.read();
     return ((payload & BALL_STATE) == BALL_STATE);
@@ -235,7 +234,7 @@ void StartMotor(const bool permanent)
     for (unsigned short currentSpeed = 100;
          currentSpeed < speedDShot;
          currentSpeed++)
-    { 
+    {
         esc.setThrottle(currentSpeed);
         delay(MotorSpeedUpDelay);
     }
@@ -250,7 +249,7 @@ void StopMotor()
     for (unsigned short currentSpeed = speedDShot;
          currentSpeed > 100;
          currentSpeed--)
-    { 
+    {
         esc.setThrottle(currentSpeed);
         delay(MotorSlowDownDelay);
     }
@@ -266,14 +265,14 @@ void StopMotor()
 
 void StartServo()
 {
-    Wire.beginTransmission(8);
+    Wire.beginTransmission(I2C_ID_SERVO);
     Wire.write(byte(SERVO_START));
     Wire.endTransmission();
 }
 
 byte FetchServoStatus()
 {
-    Wire.requestFrom(8, 1);
+    Wire.requestFrom(I2C_ID_SERVO, 1);
     while (!Wire.available()) { }
     byte payload = Wire.read();
     return (payload & SERVO_MASK);
