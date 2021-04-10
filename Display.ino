@@ -6,13 +6,13 @@ const byte NumberOfLines = 4;
 
 LiquidCrystal_I2C lcd(0x27, LineLength, NumberOfLines);
 
-void InitDisplay()
+void InitDisplay(void)
 {
     lcd.init();
     lcd.backlight();
 }
 
-void ResetDisplay()
+void ResetDisplay(void)
 {
 }
 
@@ -51,12 +51,22 @@ void PrintDebugLine(const String message)
     }
 }
 
-void DisplaySpeed(const unsigned short speedA, const unsigned short speedB)
+void DisplaySpeed(const unsigned short speedA, const unsigned short speedB, const bool debugMode)
 {
-    char s[LineLength + sizeof(char)];
-    sprintf(s, "Shoot %2u.%02u", speedA, speedB);
-    lcd.setCursor(0, 0);
-    lcd.print(s);
+    if (debugMode == false)
+    {
+        char s[LineLength + sizeof(char)];
+        sprintf(s, "Shoot %2u.%02u", speedA, speedB);
+        lcd.setCursor(0, 0);
+        lcd.print(s);
+    }
+    else
+    {
+        char s[LineLength + sizeof(char)];
+        sprintf(s, "DShot %2u.%02u DBG", speedA, speedB);
+        lcd.setCursor(0, 0);
+        lcd.print(s);
+    }
 }
 
 void PrintDShotLine(const unsigned short speedDShot)
@@ -68,7 +78,7 @@ void PrintDShotLine(const unsigned short speedDShot)
     lcd.print(str);
 }
 
-void ResetDShotLine()
+void ResetDShotLine(void)
 {
     lcd.setCursor(0, 1);
     lcd.print("                    ");
@@ -93,7 +103,7 @@ void PrintBallInfoLine(const String message)
     }
 }
 
-void ResetBallInfoLine()
+void ResetBallInfoLine(void)
 {
     lcd.setCursor(0, 1);
     lcd.print("                    ");
@@ -109,7 +119,7 @@ void PrintStatusLine(const String message)
     lcd.print(str);
 }
 
-void ResetStatusLine()
+void ResetStatusLine(void)
 {
     lcd.setCursor(0, 2);
     lcd.print("                    ");

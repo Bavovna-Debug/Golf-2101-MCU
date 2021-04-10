@@ -17,13 +17,25 @@ const int PinESC        = 8;
 //
 const int BatteryLowLevel = 582;
 
+// Speed limits for normal mode and debug mode.
+//
+const signed short shootSpeedMinimumNormalMode  = 100;
+const signed short shootSpeedMaximumNormalMode  = 1200;
+const signed short shootSpeedMinimumDebugMode   = 0;
+const signed short shootSpeedMaximumDebugMode   = 2047;
+
+// This value will be added to the shoot value in a non-debug mode.
+//
+const signed short DShotDeltaNormalMode         = 40;
+const signed short DShotDeltaDebugMode          = 0;
+
 const unsigned long MotorSpeedUpDelay                   = 2lu;
 const unsigned long MotorSlowDownDelay                  = 1lu;
 const unsigned long DelayAfterSpeedUp                   = 2lu * 1000lu;
 const unsigned long FlashSettingsInterval               = 5lu * 1000lu;
+const unsigned long EnteringSetupModeMessageDelay       = 2lu * 1000lu;
+const unsigned long LeavingSetupModeMessageDelay        = 2lu * 1000lu;
 const unsigned long BatteryStatusInterval               = 5lu * 1000lu;
-const unsigned long BatteryInitializationMessageDelay   = 3lu * 1000lu;
-const unsigned long BatteryInitializationConfirmationDelay = 2lu * 1000lu;
 
 Encoder encoderA(PinRotaryAL, PinRotaryAR);
 Encoder encoderB(PinRotaryBL, PinRotaryBR);
@@ -51,11 +63,15 @@ static unsigned short speedA = 0;
 static unsigned short speedB = 0;
 static signed short speedDisplayed = 0;
 static unsigned short speedDShot = 0;
+static signed short shootSpeedMinimum = shootSpeedMinimumNormalMode;
+static signed short shootSpeedMaximum = shootSpeedMaximumNormalMode;
+static signed short dshotDelta = DShotDeltaNormalMode;
+static bool debugMode = false;
 static bool motorRunning = false;
 static bool permanentMotorRun = false;
 static bool ballAvailableState = true;
 
-void setup()
+void setup(void)
 {
     Wire.begin();
 
@@ -71,18 +87,18 @@ void setup()
 
     ResetDisplay();
 
-    InitializeBatteryFullLevel();
+    ProcessSetupMode();
 
     ResetDisplay();
 
     ValidateSpeed();
-    DisplaySpeed(speedA, speedB);
+    DisplaySpeed(speedA, speedB, debugMode);
 
     PrintLeftButton("MTR STRT");
     PrintRightButton("SHOOT");
 }
 
-void loop()
+void loop(void)
 {
     unsigned long timestamp = millis();
 
@@ -118,7 +134,7 @@ void loop()
 
         ValidateSpeed();
 
-        DisplaySpeed(speedA, speedB);
+        DisplaySpeed(speedA, speedB, debugMode);
 
         contentVersion++;
     }
@@ -131,7 +147,10 @@ void loop()
         if (ballAvailableState == false)
         {
             PrintBallInfoLine("Load a ball!");
-            PrintRightButton("");
+            if (debugMode == false)
+            {
+                PrintRightButton("");
+            }
         }
         else
         {
@@ -158,30 +177,37 @@ void loop()
         }
     }
 
-    if ((IsRightButtonPressed() == true) && (ballAvailableState == true))
+    if (IsRightButtonPressed() == true)
     {
-        Fire();
+        if (ballAvailableState == true)
+        {
+            Fire();
+        }
+        else if (debugMode == true)
+        {
+            Fire();
+        }
     }
 }
 
-void ValidateSpeed()
+void ValidateSpeed(void)
 {
     speedDisplayed = (speedA * 100) + speedB;
 
-    if (speedDisplayed < 0)
+    if (speedDisplayed < shootSpeedMinimum)
     {
-        speedDisplayed = 0;
+        speedDisplayed = shootSpeedMinimum;
     }
 
-    if (speedDisplayed > 2000)
+    if (speedDisplayed > shootSpeedMaximum)
     {
-        speedDisplayed = 2000;
+        speedDisplayed = shootSpeedMaximum;
     }
 
     speedA = speedDisplayed / 100;
     speedB = speedDisplayed % 100;
 
-    unsigned short speedDShotNew = speedDisplayed + 47;
+    unsigned short speedDShotNew = speedDisplayed + dshotDelta;
 
     if (motorRunning == false)
     {
@@ -205,17 +231,17 @@ void ValidateSpeed()
     }
 }
 
-bool IsLeftButtonPressed()
+bool IsLeftButtonPressed(void)
 {
     return (digitalRead(PinButtonL) == LOW);
 }
 
-bool IsRightButtonPressed()
+bool IsRightButtonPressed(void)
 {
     return (digitalRead(PinButtonR) == LOW);
 }
 
-bool IsBallAvailable()
+bool IsBallAvailable(void)
 {
     Wire.requestFrom(I2C_ID_SERVO, 1);
     while (!Wire.available()) { }
@@ -242,7 +268,7 @@ void StartMotor(const bool permanent)
     ResetStatusLine();
 }
 
-void StopMotor()
+void StopMotor(void)
 {
     PrintStatusLine("slow down");
 
@@ -263,14 +289,14 @@ void StopMotor()
     ResetStatusLine();
 }
 
-void StartServo()
+void StartServo(void)
 {
     Wire.beginTransmission(I2C_ID_SERVO);
     Wire.write(byte(SERVO_START));
     Wire.endTransmission();
 }
 
-byte FetchServoStatus()
+byte FetchServoStatus(void)
 {
     Wire.requestFrom(I2C_ID_SERVO, 1);
     while (!Wire.available()) { }
@@ -278,7 +304,7 @@ byte FetchServoStatus()
     return (payload & SERVO_MASK);
 }
 
-void Fire()
+void Fire(void)
 {
     bool shortShoot = (permanentMotorRun == false) ? true : false;
 
@@ -338,37 +364,49 @@ void Fire()
     }
 }
 
-void InitializeBatteryFullLevel()
+void ProcessSetupMode(void)
 {
     if ((IsLeftButtonPressed() == true) && (IsLeftButtonPressed() == true))
     {
-        PrintDebugLine("Initializing battery");
+        PrintDebugLine("Entering setup mode");
 
-        delay(BatteryInitializationMessageDelay);
+        delay(EnteringSetupModeMessageDelay);
 
-        if ((IsLeftButtonPressed() == true) && (IsLeftButtonPressed() == true))
-        {
-            batteryFullLevel = analogRead(A3);
-            StoreToEEPROM(true);
-
-            PrintDebugLine("New level saved");
-
-            delay(BatteryInitializationConfirmationDelay);
-
-            PrintDebugLine("Release buttons");
-        }
-        else
-        {
-            PrintDebugLine("Cancelled");
-        }
+        PrintDebugLine("Release buttons");
 
         while ((IsLeftButtonPressed() == true) || (IsLeftButtonPressed() == true)) { }
 
-        delay(BatteryInitializationConfirmationDelay);
+        PrintLeftButton("DEBUG");
+        PrintRightButton("BATTERY");
+        for (;;)
+        {
+            if (IsLeftButtonPressed() == true)
+            {
+                PrintDebugLine("Running debug mode");
+
+                debugMode = true;
+                shootSpeedMinimum = shootSpeedMinimumDebugMode;
+                shootSpeedMaximum = shootSpeedMaximumDebugMode;
+                dshotDelta = DShotDeltaDebugMode;
+                break;
+            }
+            if (IsRightButtonPressed() == true)
+            {
+                PrintDebugLine("Battery level stored");
+
+                batteryFullLevel = analogRead(A3);
+                StoreToEEPROM(true);
+                break;
+            }
+        }
+
+        delay(LeavingSetupModeMessageDelay);
+
+        while ((IsLeftButtonPressed() == true) || (IsLeftButtonPressed() == true)) { }
     }
 }
 
-void UpdateBatteryStatus()
+void UpdateBatteryStatus(void)
 {
     signed int batteryLevelInPercent;
 
@@ -394,7 +432,7 @@ void UpdateBatteryStatus()
     PrintBatteryStatus(batteryLevelInPercent);
 }
 
-void LoadFromEEPROM()
+void LoadFromEEPROM(void)
 {
     EEPROM.get(0x00, eepromData);
 
