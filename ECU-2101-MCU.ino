@@ -33,9 +33,10 @@ const unsigned long MotorSpeedUpDelay                   = 2lu;
 const unsigned long MotorSlowDownDelay                  = 1lu;
 const unsigned long DelayAfterSpeedUp                   = 2lu * 1000lu;
 const unsigned long FlashSettingsInterval               = 5lu * 1000lu;
+const unsigned long BatteryStatusInterval               = 5lu * 1000lu;
+const unsigned long IdleMotorWarningInterval            = 10lu * 60lu * 1000lu; // 10 minutes.
 const unsigned long EnteringSetupModeMessageDelay       = 2lu * 1000lu;
 const unsigned long LeavingSetupModeMessageDelay        = 2lu * 1000lu;
-const unsigned long BatteryStatusInterval               = 5lu * 1000lu;
 
 Encoder encoderA(PinRotaryAL, PinRotaryAR);
 Encoder encoderB(PinRotaryBL, PinRotaryBR);
@@ -54,6 +55,7 @@ EEPROMData eepromData;
 static unsigned long contentVersion = 0;
 static unsigned long schedulerEEPROM = 0;
 static unsigned long schedulerBattery = 0;
+static unsigned long schedulerIdleMotor = IdleMotorWarningInterval;
 
 static long lastA = 0;
 static long lastB = 0;
@@ -119,6 +121,17 @@ void loop(void)
         UpdateBatteryStatus();
     }
 
+    // Check whether ESC is for too long time idle. Give a warning before ESC begins to beep.
+    //
+    if (timestamp > schedulerIdleMotor)
+    {
+        schedulerIdleMotor = timestamp + IdleMotorWarningInterval;
+        if (motorRunning == false)
+        {
+            IdleMotorWarning();
+        }
+    }
+
     long currentA = encoderA.read() / 4;
     long currentB = encoderB.read() / 4;
     if ((currentA != lastA) || (currentB != lastB))
@@ -175,6 +188,8 @@ void loop(void)
             PrintLeftButton("");
             StopMotor();
             PrintLeftButton("MTR STRT");
+
+            schedulerIdleMotor = timestamp;
         }
     }
 
@@ -183,10 +198,14 @@ void loop(void)
         if (ballAvailableState == true)
         {
             Fire();
+
+            schedulerIdleMotor = timestamp;
         }
         else if (debugMode == true)
         {
             Fire();
+
+            schedulerIdleMotor = timestamp;
         }
     }
 }
@@ -430,7 +449,16 @@ void UpdateBatteryStatus(void)
         batteryLevelInPercent = 100;
     }
 
-    PrintBatteryStatus(batteryLevelInPercent);
+    BatteryPrint(batteryLevelInPercent);
+}
+
+void IdleMotorWarning(void)
+{
+    PrintInfoLine("STILL POWERED ON!?");
+
+    esc.setThrottle(1);
+    delay(200);
+    esc.setThrottle(0);
 }
 
 void LoadFromEEPROM(void)
