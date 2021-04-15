@@ -160,7 +160,7 @@ void loop(void)
 
         if (ballAvailableState == false)
         {
-            PrintInfoLine("Load a ball!");
+            PrintInfoLine1("Load a ball!");
             if (debugMode == false)
             {
                 PrintRightButton("");
@@ -168,7 +168,7 @@ void loop(void)
         }
         else
         {
-            ResetInfoLine();
+            ResetInfoLine1();
             PrintRightButton("SHOOT");
         }
     }

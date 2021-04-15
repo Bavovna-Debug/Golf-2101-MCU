@@ -11,8 +11,11 @@ void DisplaySpeed(const unsigned short speedA, const unsigned short speedB, cons
 void PrintDShotLine(const unsigned short speedDShot);
 void ResetDShotLine(void);
 
-void PrintInfoLine(const String message);
-void ResetInfoLine(void);
+void PrintInfoLine1(const String message);
+void ResetInfoLine1(void);
+
+void PrintInfoLine2(const String message);
+void ResetInfoLine2(void);
 
 void PrintDebugLine(const String message);
 void ResetDebugLine(void);

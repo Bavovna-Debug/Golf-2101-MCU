@@ -50,7 +50,7 @@ void ResetDShotLine(void)
     lcd.print("                    ");
 }
 
-void PrintInfoLine(const String message)
+void PrintInfoLine1(const String message)
 {
     lcd.setCursor(0, 1);
 
@@ -69,9 +69,34 @@ void PrintInfoLine(const String message)
     }
 }
 
-void ResetInfoLine(void)
+void ResetInfoLine1(void)
 {
     lcd.setCursor(0, 1);
+    lcd.print("                    ");
+}
+
+void PrintInfoLine2(const String message)
+{
+    lcd.setCursor(0, 2);
+
+    byte numberOfLeadingSpaces = (LineLength - message.length()) / 2;
+    byte numberOfTrailingSpaces = (LineLength - message.length()) - numberOfLeadingSpaces;
+    for (byte i = 0; i < numberOfLeadingSpaces; i++)
+    {
+        lcd.print(" ");
+    }
+
+    lcd.print(message);
+
+    for (byte i = 0; i < numberOfTrailingSpaces; i++)
+    {
+        lcd.print(" ");
+    }
+}
+
+void ResetInfoLine2(void)
+{
+    lcd.setCursor(0, 2);
     lcd.print("                    ");
 }
 
