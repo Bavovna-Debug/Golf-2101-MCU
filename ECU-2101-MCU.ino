@@ -90,6 +90,7 @@ void setup(void)
     ProcessSetupMode();
 
     ResetDisplay();
+    BatteryInit();
 
     ValidateSpeed();
     DisplaySpeed(speedA, speedB, debugMode);
@@ -146,7 +147,7 @@ void loop(void)
 
         if (ballAvailableState == false)
         {
-            PrintBallInfoLine("Load a ball!");
+            PrintInfoLine("Load a ball!");
             if (debugMode == false)
             {
                 PrintRightButton("");
@@ -154,7 +155,7 @@ void loop(void)
         }
         else
         {
-            ResetBallInfoLine();
+            ResetInfoLine();
             PrintRightButton("SHOOT");
         }
     }
@@ -251,7 +252,7 @@ bool IsBallAvailable(void)
 
 void StartMotor(const bool permanent)
 {
-    PrintStatusLine("speed up");
+    PrintDebugLine("speed up");
 
     permanentMotorRun = permanent;
 
@@ -265,12 +266,12 @@ void StartMotor(const bool permanent)
         delay(MotorSpeedUpDelay);
     }
 
-    ResetStatusLine();
+    ResetDebugLine();
 }
 
 void StopMotor(void)
 {
-    PrintStatusLine("slow down");
+    PrintDebugLine("slow down");
 
     for (unsigned short currentSpeed = speedDShot;
          currentSpeed > 100;
@@ -286,7 +287,7 @@ void StopMotor(void)
 
     permanentMotorRun = false;
 
-    ResetStatusLine();
+    ResetDebugLine();
 }
 
 void StartServo(void)
@@ -314,14 +315,14 @@ void Fire(void)
 
         PrintDShotLine(speedDShot);
 
-        PrintStatusLine("wait for RPM");
+        PrintDebugLine("wait for RPM");
         delay(DelayAfterSpeedUp);
-        ResetStatusLine();
+        ResetDebugLine();
     }
 
     do
     {
-        PrintStatusLine("fire");
+        PrintDebugLine("fire");
 
         StartServo();
 
@@ -337,15 +338,15 @@ void Fire(void)
                 switch (servoStatus)
                 {
                     case SERVO_LOAD:
-                        PrintStatusLine("ball load");
+                        PrintDebugLine("ball load");
                         break;
 
                     case SERVO_TURN:
-                        PrintStatusLine("ball turn");
+                        PrintDebugLine("ball turn");
                         break;
 
                     case SERVO_DONE:
-                        ResetStatusLine();
+                        ResetDebugLine();
                         break;
                 }
 
@@ -368,11 +369,11 @@ void ProcessSetupMode(void)
 {
     if ((IsLeftButtonPressed() == true) && (IsLeftButtonPressed() == true))
     {
-        PrintDebugLine("Entering setup mode");
+        PrintSpecialLine("Entering setup mode");
 
         delay(EnteringSetupModeMessageDelay);
 
-        PrintDebugLine("Release buttons");
+        PrintSpecialLine("Release buttons");
 
         while ((IsLeftButtonPressed() == true) || (IsLeftButtonPressed() == true)) { }
 
@@ -382,7 +383,7 @@ void ProcessSetupMode(void)
         {
             if (IsLeftButtonPressed() == true)
             {
-                PrintDebugLine("Running debug mode");
+                PrintSpecialLine("Running debug mode");
 
                 debugMode = true;
                 shootSpeedMinimum = shootSpeedMinimumDebugMode;
@@ -392,7 +393,7 @@ void ProcessSetupMode(void)
             }
             if (IsRightButtonPressed() == true)
             {
-                PrintDebugLine("Battery level stored");
+                PrintSpecialLine("Battery level stored");
 
                 batteryFullLevel = analogRead(A3);
                 StoreToEEPROM(true);

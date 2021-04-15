@@ -1,4 +1,5 @@
 #include <LiquidCrystal_I2C.h>
+#include "Battery.h"
 #include "Display.h"
 
 const byte LineLength = 20;
@@ -14,41 +15,6 @@ void InitDisplay(void)
 
 void ResetDisplay(void)
 {
-}
-
-void PrintBatteryStatus(const byte batteryLevel)
-{
-    if (batteryLevel == 0)
-    {
-        lcd.setCursor(16, 0);
-        lcd.print("Low!");
-    }
-    else
-    {
-        char s[LineLength + sizeof(char)];
-        sprintf(s, "%3u%%", batteryLevel);
-        lcd.setCursor(16, 0);
-        lcd.print(s);
-    }
-}
-
-void PrintDebugLine(const String message)
-{
-    lcd.setCursor(0, 3);
-
-    byte numberOfLeadingSpaces = (LineLength - message.length()) / 2;
-    byte numberOfTrailingSpaces = (LineLength - message.length()) - numberOfLeadingSpaces;
-    for (byte i = 0; i < numberOfLeadingSpaces; i++)
-    {
-        lcd.print(" ");
-    }
-
-    lcd.print(message);
-
-    for (byte i = 0; i < numberOfTrailingSpaces; i++)
-    {
-        lcd.print(" ");
-    }
 }
 
 void DisplaySpeed(const unsigned short speedA, const unsigned short speedB, const bool debugMode)
@@ -84,7 +50,7 @@ void ResetDShotLine(void)
     lcd.print("                    ");
 }
 
-void PrintBallInfoLine(const String message)
+void PrintInfoLine(const String message)
 {
     lcd.setCursor(0, 1);
 
@@ -103,13 +69,13 @@ void PrintBallInfoLine(const String message)
     }
 }
 
-void ResetBallInfoLine(void)
+void ResetInfoLine(void)
 {
     lcd.setCursor(0, 1);
     lcd.print("                    ");
 }
 
-void PrintStatusLine(const String message)
+void PrintDebugLine(const String message)
 {
     char str[LineLength + sizeof(char)];
     sprintf(str, "Debug: %s", message.c_str());
@@ -119,10 +85,29 @@ void PrintStatusLine(const String message)
     lcd.print(str);
 }
 
-void ResetStatusLine(void)
+void ResetDebugLine(void)
 {
     lcd.setCursor(0, 2);
     lcd.print("                    ");
+}
+
+void PrintSpecialLine(const String message)
+{
+    lcd.setCursor(0, 3);
+
+    byte numberOfLeadingSpaces = (LineLength - message.length()) / 2;
+    byte numberOfTrailingSpaces = (LineLength - message.length()) - numberOfLeadingSpaces;
+    for (byte i = 0; i < numberOfLeadingSpaces; i++)
+    {
+        lcd.print(" ");
+    }
+
+    lcd.print(message);
+
+    for (byte i = 0; i < numberOfTrailingSpaces; i++)
+    {
+        lcd.print(" ");
+    }
 }
 
 void PrintLeftButton(const String buttonLabel)
@@ -166,5 +151,67 @@ void PrintRightButton(const String buttonLabel)
         lcd.print("[");
         lcd.print(buttonLabel);
         lcd.print("]");
+    }
+}
+
+void BatteryInit(void)
+{
+    lcd.setCursor(16, 0);
+    lcd.write(byte(0));
+    lcd.write(byte(1));
+    lcd.write(byte(2));
+    lcd.write(byte(3));
+}
+
+void BatteryPrint(const byte level)
+{
+    if (level < 10)
+    {
+        lcd.createChar(0, SymbolBatteryA[0]);
+        lcd.createChar(1, SymbolBatteryB[0]);
+        lcd.createChar(2, SymbolBatteryB[0]);
+        lcd.createChar(3, SymbolBatteryC[0]);
+    }
+    else if (level < 25)
+    {
+        lcd.createChar(0, SymbolBatteryA[1]);
+        lcd.createChar(1, SymbolBatteryB[0]);
+        lcd.createChar(2, SymbolBatteryB[0]);
+        lcd.createChar(3, SymbolBatteryC[0]);
+    }
+    else if (level < 40)
+    {
+        lcd.createChar(0, SymbolBatteryA[1]);
+        lcd.createChar(1, SymbolBatteryB[1]);
+        lcd.createChar(2, SymbolBatteryB[0]);
+        lcd.createChar(3, SymbolBatteryC[0]);
+    }
+    else if (level < 55)
+    {
+        lcd.createChar(0, SymbolBatteryA[1]);
+        lcd.createChar(1, SymbolBatteryB[2]);
+        lcd.createChar(2, SymbolBatteryB[0]);
+        lcd.createChar(3, SymbolBatteryC[0]);
+    }
+    else if (level < 70)
+    {
+        lcd.createChar(0, SymbolBatteryA[1]);
+        lcd.createChar(1, SymbolBatteryB[2]);
+        lcd.createChar(2, SymbolBatteryB[1]);
+        lcd.createChar(3, SymbolBatteryC[0]);
+    }
+    else if (level < 85)
+    {
+        lcd.createChar(0, SymbolBatteryA[1]);
+        lcd.createChar(1, SymbolBatteryB[2]);
+        lcd.createChar(2, SymbolBatteryB[2]);
+        lcd.createChar(3, SymbolBatteryC[0]);
+    }
+    else
+    {
+        lcd.createChar(0, SymbolBatteryA[1]);
+        lcd.createChar(1, SymbolBatteryB[2]);
+        lcd.createChar(2, SymbolBatteryB[2]);
+        lcd.createChar(3, SymbolBatteryC[1]);
     }
 }

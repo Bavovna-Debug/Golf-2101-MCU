@@ -6,24 +6,20 @@ void InitDisplay(void);
 
 void ResetDisplay(void);
 
-void PrintBatteryStatus(const byte batteryLevel);
-
-void PrintDebugLine(const String message);
-
 void DisplaySpeed(const unsigned short speedA, const unsigned short speedB, const bool debugMode);
 
 void PrintDShotLine(const unsigned short speedDShot);
-
 void ResetDShotLine(void);
 
-void PrintBallInfoLine(const String message);
+void PrintInfoLine(const String message);
+void ResetInfoLine(void);
 
-void ResetBallInfoLine(void);
+void PrintDebugLine(const String message);
+void ResetDebugLine(void);
 
-void PrintStatusLine(const String message);
-
-void ResetStatusLine(void);
-
+void PrintSpecialLine(const String message);
 void PrintLeftButton(const String buttonLabel);
-
 void PrintRightButton(const String buttonLabel);
+
+void BatteryInit(void);
+void BatteryPrint(const byte level);
