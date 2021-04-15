@@ -189,7 +189,7 @@ void loop(void)
             StopMotor();
             PrintLeftButton("MTR STRT");
 
-            schedulerIdleMotor = timestamp;
+            schedulerIdleMotor = timestamp + IdleMotorWarningInterval;
         }
     }
 
@@ -199,13 +199,13 @@ void loop(void)
         {
             Fire();
 
-            schedulerIdleMotor = timestamp;
+            schedulerIdleMotor = timestamp + IdleMotorWarningInterval;
         }
         else if (debugMode == true)
         {
             Fire();
 
-            schedulerIdleMotor = timestamp;
+            schedulerIdleMotor = timestamp + IdleMotorWarningInterval;
         }
     }
 }
@@ -454,11 +454,7 @@ void UpdateBatteryStatus(void)
 
 void IdleMotorWarning(void)
 {
-    PrintInfoLine("STILL POWERED ON!?");
-
-    esc.setThrottle(1);
-    delay(200);
-    esc.setThrottle(0);
+    PrintInfoLine2("STILL POWERED ON!?");
 }
 
 void LoadFromEEPROM(void)
