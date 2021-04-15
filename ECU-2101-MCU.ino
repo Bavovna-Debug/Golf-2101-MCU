@@ -34,7 +34,7 @@ const unsigned long MotorSlowDownDelay                  = 1lu;
 const unsigned long DelayAfterSpeedUp                   = 2lu * 1000lu;
 const unsigned long FlashSettingsInterval               = 5lu * 1000lu;
 const unsigned long BatteryStatusInterval               = 5lu * 1000lu;
-const unsigned long IdleMotorWarningInterval            = 10lu * 60lu * 1000lu; // 10 minutes.
+const unsigned long IdleMotorWarningInterval            = ((10lu * 60lu) - 10lu) * 1000lu; // 10 minutes - 10 seconds.
 const unsigned long EnteringSetupModeMessageDelay       = 2lu * 1000lu;
 const unsigned long LeavingSetupModeMessageDelay        = 2lu * 1000lu;
 
